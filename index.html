@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Apex Recoil Simulator</title>
+</head>
+<body>
+
+<canvas id="myCanvas" width="400" height="500" style="border: 1px solid black;"></canvas>
+
+<script>
+    let canvasElement = document.getElementById("myCanvas");
+    let context = canvasElement.getContext("2d");
+    drawDot(10, 10);
+
+    function drawDot(x, y) {
+        context.fillRect(x, y, 5, 5);
+    }
+</script>
+
+</body>
+</html>
