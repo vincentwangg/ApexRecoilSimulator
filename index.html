@@ -6,15 +6,42 @@
 </head>
 <body>
 
+<!-- Recoil patterns -->
+<script>
+    let patterns = {
+        "R-301": [
+            [0, 5],
+            [3, 5]
+        ]
+    }
+</script>
+
 <canvas id="myCanvas" width="400" height="500" style="border: 1px solid black;"></canvas>
 
 <script>
     let canvasElement = document.getElementById("myCanvas");
     let context = canvasElement.getContext("2d");
-    drawDot(10, 10);
 
-    function drawDot(x, y) {
-        context.fillRect(x, y, 5, 5);
+    function getCanvas() {
+        return canvasElement;
+    }
+
+    let startingCoordinate = [];
+    drawDot(c(0, 0));
+    patterns["R-301"].forEach(value => {
+    });
+
+    function drawDot(coordinate) {
+        context.fillRect(coordinate[0], coordinate[1], 5, 5);
+    }
+
+    // Convert human coordinate to canvas coordinate
+    // Coordinate system is x axis along the bottom, y axis in the middle
+    function c(x, y) {
+        return [
+            getCanvas().width / 2 + x,
+            getCanvas().height - y - 40
+        ];
     }
 </script>
 
