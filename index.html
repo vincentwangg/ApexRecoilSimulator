@@ -16,12 +16,21 @@
     }
 </script>
 
-<canvas id="myCanvas" width="400" height="500" style="border: 1px solid black;"></canvas>
+<canvas id="myCanvas" width="900" height="500" style="border: 1px solid black;"></canvas>
 <div id="recoilPatternCreationPanel">
+    <p>Recoil pattern creation/edit</p>
     <button id="createRecoilPatternButton" onclick="createRecoilPattern()">Create Recoil Pattern</button>
     <button id="undoRecoilPatternButton" onclick="undoRecoilPatternMove()" disabled>Undo</button>
     <button id="finishRecoilPatternButton" onclick="finishRecoilPattern()" disabled>Done</button>
     <button id="cancelRecoilPatternButton" onclick="cancelRecoilPattern()" disabled>Cancel</button>
+</div>
+<div id="recoilPatternSimulation">
+    <p>Recoil pattern simulation</p>
+    <button>Track Left</button>
+    <button>Track Right</button>
+    <div>
+        <input type="range" min="1" max="100" value="50" class="slider" id="trackingSlider">
+    </div>
 </div>
 <div id="presetRecoilPatternsDiv">
     <p>Light Guns</p>
@@ -174,7 +183,6 @@
         coordTracker[0] = newCoord[0];
         coordTracker[1] = newCoord[1];
         drawDotH(coordTracker);
-        document.getElementById("debugOutput").innerText = recoilPattern;
     });
 
     ////////////////// Preset recoil patterns //////////////////
