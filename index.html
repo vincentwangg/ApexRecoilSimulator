@@ -16,7 +16,13 @@
     }
 </script>
 
-<canvas id="myCanvas" width="900" height="500" style="border: 1px solid black;"></canvas>
+<div id="notifications" style="height:50px">
+    <p id="notificationText"></p>
+</div>
+<canvas id="myCanvas" width="1500" height="500" style="border: 1px solid black;"></canvas>
+<div>
+    <p id="currentRecoilPattern">Current loaded recoil pattern: None</p>
+</div>
 <div id="recoilPatternCreationPanel">
     <p>Recoil pattern creation/edit</p>
     <button id="createRecoilPatternButton" onclick="createRecoilPattern()">Create Recoil Pattern</button>
@@ -26,10 +32,10 @@
 </div>
 <div id="recoilPatternSimulation">
     <p>Recoil pattern simulation</p>
-    <button>Track Left</button>
-    <button>Track Right</button>
+    <button id="trackLeftButton" onclick="initiateTrackLeft()" disabled>Track Left</button>
+    <button id="trackRightButton" onclick="initiateTrackLeft()" disabled>Track Right</button>
     <div>
-        <input type="range" min="1" max="100" value="50" class="slider" id="trackingSlider">
+        <input type="range" min="1" max="100" value="50" class="slider" id="trackingSlider" disabled>
     </div>
 </div>
 <div id="presetRecoilPatternsDiv">
@@ -48,7 +54,7 @@
     let canvasElement = document.getElementById("myCanvas");
     let context = canvasElement.getContext("2d");
 
-    let dotSize = 3;
+    let dotSize = 5;
 
     // Global state variables
     let editMode = false;
@@ -80,12 +86,51 @@
         });
     }
 
-    function drawDotC(coordinate) {
+    function drawRecoilPatternSimulation(recoilPatternArray, startingCCoord, trackingPattern) {
+        let mouseTrackingCoord = [startingCCoord[0], startingCCoord[1]];
+        let outputTrackingCoord = [startingCCoord[0], startingCCoord[1]];
+        let antiOriginalRecoilPatternCoord = [startingCCoord[0], startingCCoord[1]];
+        let originalRecoilPatternCoord = [startingCCoord[0], startingCCoord[1]];
+        drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]]);
+        recoilPatternArray.forEach((value, index) => {
+            console.log("yo" + value);
+            let trackingPatternX, trackingPatternY;
+            if (index >= trackingPattern.length) {
+                trackingPatternX = 0;
+                trackingPatternY = 0;
+            } else {
+                trackingPatternX = trackingPattern[index][0];
+                trackingPatternY = trackingPattern[index][1];
+            }
+
+            mouseTrackingCoord[0] = mouseTrackingCoord[0] + value[0] + trackingPatternX;
+            mouseTrackingCoord[1] = mouseTrackingCoord[1] + value[1] + trackingPatternY;
+            drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]]);
+
+            outputTrackingCoord[0] += trackingPatternX;
+            outputTrackingCoord[1] += trackingPatternY;
+            drawDotC([outputTrackingCoord[0], outputTrackingCoord[1]], "#0000ff");
+
+            // Original recoil pattern (as dragged by mouse)
+            antiOriginalRecoilPatternCoord[0] += value[0];
+            antiOriginalRecoilPatternCoord[1] += value[1];
+            drawDotC([antiOriginalRecoilPatternCoord[0], antiOriginalRecoilPatternCoord[1]], "#ff0000");
+
+            // Original recoil pattern
+            originalRecoilPatternCoord[0] -= value[0];
+            originalRecoilPatternCoord[1] -= value[1];
+            drawDotC([originalRecoilPatternCoord[0], originalRecoilPatternCoord[1]], "#ff8100");
+        });
+    }
+
+    function drawDotC(coordinate, color = "#000000") {
+        getCanvasContext().fillStyle = color;
         getCanvasContext().fillRect(coordinate[0], coordinate[1], dotSize, dotSize);
     }
 
-    function drawDotH(coordinate) {
+    function drawDotH(coordinate, color = "#000000") {
         let cCoord = htoc(coordinate[0], coordinate[1]);
+        getCanvasContext().fillStyle = color;
         getCanvasContext().fillRect(cCoord[0], cCoord[1], dotSize, dotSize);
     }
 
@@ -96,6 +141,12 @@
     function eraseDotH(coordinate) {
         let cCoord = htoc(coordinate[0], coordinate[1]);
         getCanvasContext().fillRect(cCoord[0], cCoord[1], dotSize, dotSize);
+    }
+
+    function hardResetCanvas() {
+        editMode = false;
+        simulationMode = false;
+        clearCanvas();
     }
 
     // Convert human coordinate to canvas coordinate
@@ -116,11 +167,9 @@
         ];
     }
 
-    getCanvas().addEventListener("mousedown", event => {
-        let rect = getCanvas().getBoundingClientRect();
-        let x = event.clientX - rect.left;
-        let y = event.clientY - rect.top;
-    });
+    ////////////////// Loaded recoil pattern //////////////////
+
+    let loadedRecoilPattern = null;
 
     ////////////////// Recoil pattern creation //////////////////
 
@@ -185,14 +234,51 @@
         drawDotH(coordTracker);
     });
 
+    ////////////////// Recoil simulation //////////////////
+
+    let simulationMode = false;
+    let trackingSimulationPattern = null;
+
+    function updateSimulationButtons() {
+        document.getElementById("trackLeftButton").disabled = loadedRecoilPattern == null;
+        document.getElementById("trackRightButton").disabled = loadedRecoilPattern == null;
+        document.getElementById("trackingSlider").disabled = loadedRecoilPattern == null;
+    }
+
+    function initiateTrackLeft() {
+        document.getElementById("notificationText").innerText = "Please select a place to start tracking left from";
+        setTimeout(() => {
+            document.getElementById("notificationText").innerText = "";
+        }, 2000);
+
+        hardResetCanvas();
+        simulationMode = true;
+
+        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([-50, 0]);
+    }
+
+    getCanvas().addEventListener("mousedown", event => {
+        if (!simulationMode) { return; }
+
+        let rect = getCanvas().getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+        let newCoord = [x, y];
+
+        drawRecoilPatternSimulation(loadedRecoilPattern, newCoord, trackingSimulationPattern);
+    });
+
     ////////////////// Preset recoil patterns //////////////////
 
     let presetRecoilPatterns = {
-        "R-301": [[0,24],[7,30],[-5,33],[-5,34],[2,22],[11,33],[6,21]]
+        "R-301": [[2,27],[8,26],[2,19],[6,7],[8,5],[9,5],[9,4],[-2,9],[-11,1],[-13,2],[-26,4],[-22,1],[-22,1],[-1,32],[15,8],[20,11],[21,14],[9,7],[13,-1],[10,-4]]
     }
 
     function displayPresetRecoilPattern(gunName) {
-        drawRecoilPattern(presetRecoilPatterns[gunName]);
+        loadedRecoilPattern = presetRecoilPatterns[gunName]
+        drawRecoilPattern(loadedRecoilPattern);
+        updateSimulationButtons();
+        document.getElementById("currentRecoilPattern").innerText = "Current loaded recoil pattern: " + gunName;
     }
 </script>
 
