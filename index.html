@@ -19,7 +19,7 @@
 <div id="notifications" style="height:50px">
     <p id="notificationText"></p>
 </div>
-<canvas id="myCanvas" width="1500" height="500" style="border: 1px solid black;"></canvas>
+<canvas id="myCanvas" width="1500" height="800" style="border: 1px solid black;"></canvas>
 <div>
     <p id="currentRecoilPattern">Current loaded recoil pattern: None</p>
 </div>
@@ -35,7 +35,7 @@
     <button id="trackLeftButton" onclick="initiateTrackLeft()" disabled>Track Left</button>
     <button id="trackRightButton" onclick="initiateTrackRight()" disabled>Track Right</button>
     <div>
-        <input type="range" min="1" max="100" value="50" class="slider" id="trackingSlider" onchange="onTrackingSliderChange(this.value)" disabled>
+        <input type="range" min="0" max="100" value="50" class="slider" id="trackingSlider" onchange="onTrackingSliderChange(this.value)" disabled>
     </div>
 </div>
 <div id="presetRecoilPatternsDiv">
@@ -68,6 +68,12 @@
 
     function clearCanvas() {
         getCanvasContext().clearRect(0, 0, getCanvas().width, getCanvas().height);
+        base_image = new Image();
+        base_image.src = 'img.png';
+        getCanvasContext().globalAlpha = 0.4;
+        base_image.onload = function(){
+            getCanvasContext().drawImage(base_image, 0, 0);
+        }
     }
 
     function drawRecoilPattern(recoilPatternArray, shouldLockAndClearCanvas = true) {
@@ -102,7 +108,7 @@
                 trackingPatternY = trackingPattern[index][1];
             }
 
-            mouseTrackingCoord[0] = mouseTrackingCoord[0] + value[0] + trackingPatternX;
+            mouseTrackingCoord[0] = mouseTrackingCoord[0] - value[0] + trackingPatternX;
             mouseTrackingCoord[1] = mouseTrackingCoord[1] + value[1] + trackingPatternY;
             drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]]);
 
@@ -111,12 +117,12 @@
             drawDotC([outputTrackingCoord[0], outputTrackingCoord[1]], "#0000ff");
 
             // Original recoil pattern (as dragged by mouse)
-            antiOriginalRecoilPatternCoord[0] += value[0];
+            antiOriginalRecoilPatternCoord[0] -= value[0];
             antiOriginalRecoilPatternCoord[1] += value[1];
             drawDotC([antiOriginalRecoilPatternCoord[0], antiOriginalRecoilPatternCoord[1]], "#ff0000");
 
             // Original recoil pattern
-            originalRecoilPatternCoord[0] -= value[0];
+            originalRecoilPatternCoord[0] += value[0];
             originalRecoilPatternCoord[1] -= value[1];
             drawDotC([originalRecoilPatternCoord[0], originalRecoilPatternCoord[1]], "#ff8100");
         });
@@ -173,7 +179,7 @@
     ////////////////// Recoil pattern creation //////////////////
 
     let recoilPattern = [];
-    let coordTracker = [0, 0];
+    let coordTracker = null;
 
     function enableRecoilPatternButtons(create, undo, done, cancel) {
         document.getElementById("createRecoilPatternButton").disabled = !create;
@@ -185,8 +191,7 @@
     function createRecoilPattern() {
         hardResetCanvas();
         editMode = true;
-        drawDotC(htoc(0, 0));
-        coordTracker = [0, 0];
+        coordTracker = null;
         recoilPattern.length = 0;
         enableRecoilPatternButtons(false, true, true, true);
     }
@@ -227,7 +232,12 @@
         let y = event.clientY - rect.top;
         let newCoord = ctoh(x, y);
 
-        recoilPattern.push([newCoord[0] - coordTracker[0], newCoord[1] - coordTracker[1]]);
+        if (coordTracker != null) {
+            recoilPattern.push([newCoord[0] - coordTracker[0], newCoord[1] - coordTracker[1]]);
+        } else {
+            coordTracker = [0, 0];
+        }
+
         coordTracker[0] = newCoord[0];
         coordTracker[1] = newCoord[1];
         drawDotH(coordTracker);
@@ -300,7 +310,14 @@
     ////////////////// Preset recoil patterns //////////////////
 
     let presetRecoilPatterns = {
-        "R-301": [[2,27],[8,26],[2,19],[6,7],[8,5],[9,5],[9,4],[-2,9],[-11,1],[-13,2],[-26,4],[-22,1],[-22,1],[-1,32],[15,8],[20,11],[21,14],[9,7],[13,-1],[10,-4]]
+        "R-301": [[17,36],[-2,61],[25,32],[1,31],[-5,26],[-8,15],[4,21],[25,-2],[9,7],[20,3],[3,5],[-27,23],[-13,12],[-19,0],[-24,-1],[-18,-5],[-5,4],[-7,0],[2,17],[-1,11],[20,6],[17,-14],[15,-11],[13,11],[11,12],[-19,6],[-1,-4]],
+        "R-99": [],
+        "RE-45": [],
+        "": [],
+        "": [],
+        "": [],
+        "": [],
+        "": [],
     }
 
     function displayPresetRecoilPattern(gunName) {
