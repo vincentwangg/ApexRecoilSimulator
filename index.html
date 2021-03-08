@@ -33,9 +33,9 @@
 <div id="recoilPatternSimulation">
     <p>Recoil pattern simulation</p>
     <button id="trackLeftButton" onclick="initiateTrackLeft()" disabled>Track Left</button>
-    <button id="trackRightButton" onclick="initiateTrackLeft()" disabled>Track Right</button>
+    <button id="trackRightButton" onclick="initiateTrackRight()" disabled>Track Right</button>
     <div>
-        <input type="range" min="1" max="100" value="50" class="slider" id="trackingSlider" disabled>
+        <input type="range" min="1" max="100" value="50" class="slider" id="trackingSlider" onchange="onTrackingSliderChange(this.value)" disabled>
     </div>
 </div>
 <div id="presetRecoilPatternsDiv">
@@ -93,7 +93,6 @@
         let originalRecoilPatternCoord = [startingCCoord[0], startingCCoord[1]];
         drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]]);
         recoilPatternArray.forEach((value, index) => {
-            console.log("yo" + value);
             let trackingPatternX, trackingPatternY;
             if (index >= trackingPattern.length) {
                 trackingPatternX = 0;
@@ -184,8 +183,8 @@
     }
 
     function createRecoilPattern() {
+        hardResetCanvas();
         editMode = true;
-        clearCanvas();
         drawDotC(htoc(0, 0));
         coordTracker = [0, 0];
         recoilPattern.length = 0;
@@ -238,11 +237,13 @@
 
     let simulationMode = false;
     let trackingSimulationPattern = null;
+    let startingCoordForSimulation = null;
+    let simulatingTrackingMode = null;
 
     function updateSimulationButtons() {
         document.getElementById("trackLeftButton").disabled = loadedRecoilPattern == null;
         document.getElementById("trackRightButton").disabled = loadedRecoilPattern == null;
-        document.getElementById("trackingSlider").disabled = loadedRecoilPattern == null;
+        document.getElementById("trackingSlider").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
     }
 
     function initiateTrackLeft() {
@@ -253,8 +254,35 @@
 
         hardResetCanvas();
         simulationMode = true;
+        simulatingTrackingMode = "left";
 
         trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([-50, 0]);
+    }
+
+    function initiateTrackRight() {
+        document.getElementById("notificationText").innerText = "Please select a place to start tracking right from";
+        setTimeout(() => {
+            document.getElementById("notificationText").innerText = "";
+        }, 2000);
+
+        hardResetCanvas();
+        simulationMode = true;
+        simulatingTrackingMode = "right";
+
+        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([50, 0]);
+    }
+
+    function onTrackingSliderChange(sliderValue) {
+        clearCanvas();
+        let adjustedSliderValue;
+        if (simulatingTrackingMode === "left") {
+            adjustedSliderValue = sliderValue * -1;
+        } else if (simulatingTrackingMode === "right") {
+            adjustedSliderValue = sliderValue * 1;
+        }
+        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([adjustedSliderValue, 0]);
+        console.log(trackingSimulationPattern);
+        drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern);
     }
 
     getCanvas().addEventListener("mousedown", event => {
@@ -263,9 +291,10 @@
         let rect = getCanvas().getBoundingClientRect();
         let x = event.clientX - rect.left;
         let y = event.clientY - rect.top;
-        let newCoord = [x, y];
+        startingCoordForSimulation = [x, y];
+        updateSimulationButtons();
 
-        drawRecoilPatternSimulation(loadedRecoilPattern, newCoord, trackingSimulationPattern);
+        drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern);
     });
 
     ////////////////// Preset recoil patterns //////////////////
