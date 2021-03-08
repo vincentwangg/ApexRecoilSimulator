@@ -27,11 +27,11 @@
     }
 
     let coordinate = [0, 0];
-    drawDot(c(coordinate[0], coordinate[1]));
+    drawDot(htoc(coordinate[0], coordinate[1]));
     patterns["R-301"].forEach(value => {
         coordinate[0] = coordinate[0] + value[0];
         coordinate[1] = coordinate[1] + value[1];
-        drawDot(c(coordinate[0], coordinate[1]))
+        drawDot(htoc(coordinate[0], coordinate[1]))
     });
 
     function drawDot(coordinate) {
@@ -40,12 +40,25 @@
 
     // Convert human coordinate to canvas coordinate
     // Coordinate system is x axis along the bottom, y axis in the middle
-    function c(x, y) {
+    // htoc = human to canvas
+    function htoc(x, y) {
         return [
-            getCanvas().width / 2 + x,
+            x + getCanvas().width / 2,
             getCanvas().height - y - 40
         ];
     }
+    function ctoh(x, y) {
+        return [
+            x - getCanvas().width / 2,
+            getCanvas().height - y - 40
+        ];
+    }
+
+    getCanvas().addEventListener("mousedown", event => {
+        let rect = getCanvas().getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+    });
 </script>
 
 </body>
