@@ -18,10 +18,13 @@
 
 <canvas id="myCanvas" width="400" height="500" style="border: 1px solid black;"></canvas>
 <div id="recoilPatternCreationPanel">
-    <button onclick="createRecoilPattern()">Create Recoil Pattern</button>
-    <button onclick="undoRecoilPatternMove()">Undo</button>
-    <button onclick="saveRecoilPattern()">Save</button>
-    <button onclick="cancelRecoilPattern()">Cancel</button>
+    <button id="createRecoilPatternButton" onclick="createRecoilPattern()">Create Recoil Pattern</button>
+    <button id="undoRecoilPatternButton" onclick="undoRecoilPatternMove()" disabled>Undo</button>
+    <button id="finishRecoilPatternButton" onclick="finishRecoilPattern()" disabled>Done</button>
+    <button id="cancelRecoilPatternButton" onclick="cancelRecoilPattern()" disabled>Cancel</button>
+</div>
+<div id="outputDiv">
+    <p id="output"></p>
 </div>
 <div id="debug">
     <p id="debugOutput"></p>
@@ -104,14 +107,20 @@
     let recoilPattern = [];
     let coordTracker = [0, 0];
 
+    function enableRecoilPatternButtons(create, undo, done, cancel) {
+        document.getElementById("createRecoilPatternButton").disabled = !create;
+        document.getElementById("undoRecoilPatternButton").disabled = !undo;
+        document.getElementById("finishRecoilPatternButton").disabled = !done;
+        document.getElementById("cancelRecoilPatternButton").disabled = !cancel;
+    }
+
     function createRecoilPattern() {
         editMode = true;
         clearCanvas();
         drawDotC(htoc(0, 0));
         coordTracker = [0, 0];
         recoilPattern.length = 0;
-
-        console.log(recoilPattern);
+        enableRecoilPatternButtons(false, true, true, true);
     }
 
     function undoRecoilPatternMove() {
@@ -122,6 +131,25 @@
 
         drawRecoilPattern(recoilPattern);
         document.getElementById("debugOutput").innerText = recoilPattern;
+    }
+
+    function finishRecoilPattern() {
+        editMode = false;
+
+        let saveText = JSON.stringify(recoilPattern);
+        copyTextToClipboard(saveText);
+
+        let outputText = "Finished your recoil pattern! The following has been copied to your clipboard:";
+        recoilPattern.forEach(value => {
+            outputText += '\n' + value;
+        });
+        document.getElementById("output").innerText = outputText;
+    }
+
+    function cancelRecoilPattern() {
+        editMode = false;
+        clearCanvas();
+        enableRecoilPatternButtons(true, false, false, false);
     }
 
     getCanvas().addEventListener("mousedown", event => {
@@ -140,5 +168,48 @@
     });
 </script>
 
+<script>
+    // Random copied stuff
+    function copyTextToClipboard(text) {
+        var textArea = document.createElement("textarea");
+
+        // Place in the top-left corner of screen regardless of scroll position.
+        textArea.style.position = 'fixed';
+        textArea.style.top = 0;
+        textArea.style.left = 0;
+
+        // Ensure it has a small width and height. Setting to 1px / 1em
+        // doesn't work as this gives a negative w/h on some browsers.
+        textArea.style.width = '2em';
+        textArea.style.height = '2em';
+
+        // We don't need padding, reducing the size if it does flash render.
+        textArea.style.padding = 0;
+
+        // Clean up any borders.
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+
+        // Avoid flash of the white box if rendered for any reason.
+        textArea.style.background = 'transparent';
+
+
+        textArea.value = text;
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            var successful = document.execCommand('copy');
+            var msg = successful ? 'successful' : 'unsuccessful';
+        } catch (err) {
+            document.getElementById("debugOutput").innerText = "Error happened when copying to clipboard. Here's the text to manually copy for yourself: " + text;
+        }
+
+        document.body.removeChild(textArea);
+    }
+</script>
 </body>
 </html>
