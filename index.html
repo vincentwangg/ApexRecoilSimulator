@@ -23,6 +23,11 @@
     <button id="finishRecoilPatternButton" onclick="finishRecoilPattern()" disabled>Done</button>
     <button id="cancelRecoilPatternButton" onclick="cancelRecoilPattern()" disabled>Cancel</button>
 </div>
+<div id="presetRecoilPatternsDiv">
+    <p>Light Guns</p>
+    <button onclick="displayPresetRecoilPattern('R-301')">R-301</button>
+    <button onclick="displayPresetRecoilPattern('R-99')">R-99</button>
+</div>
 <div id="outputDiv">
     <p id="output"></p>
 </div>
@@ -50,7 +55,13 @@
         getCanvasContext().clearRect(0, 0, getCanvas().width, getCanvas().height);
     }
 
-    function drawRecoilPattern(recoilPatternArray) {
+    function drawRecoilPattern(recoilPatternArray, shouldLockAndClearCanvas = true) {
+        if (shouldLockAndClearCanvas) {
+            editMode = false;
+            clearCanvas();
+            enableRecoilPatternButtons(true, false, false, false);
+        }
+
         let coordinate = [0, 0];
         drawDotC(htoc(coordinate[0], coordinate[1]));
         recoilPatternArray.forEach(value => {
@@ -129,8 +140,7 @@
         // Redraw full canvas because i'm too lazy to figure out how to undo
         clearCanvas();
 
-        drawRecoilPattern(recoilPattern);
-        document.getElementById("debugOutput").innerText = recoilPattern;
+        drawRecoilPattern(recoilPattern, false);
     }
 
     function finishRecoilPattern() {
@@ -166,6 +176,16 @@
         drawDotH(coordTracker);
         document.getElementById("debugOutput").innerText = recoilPattern;
     });
+
+    ////////////////// Preset recoil patterns //////////////////
+
+    let presetRecoilPatterns = {
+        "R-301": [[0,24],[7,30],[-5,33],[-5,34],[2,22],[11,33],[6,21]]
+    }
+
+    function displayPresetRecoilPattern(gunName) {
+        drawRecoilPattern(presetRecoilPatterns[gunName]);
+    }
 </script>
 
 <script>
