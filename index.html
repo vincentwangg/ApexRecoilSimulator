@@ -17,25 +17,42 @@
 </script>
 
 <canvas id="myCanvas" width="400" height="500" style="border: 1px solid black;"></canvas>
+<div id="recoilPatternCreationPanel">
+    <button onclick="createRecoilPattern()">Create Recoil Pattern</button>
+</div>
+<div id="debug">
+    <p id="debugOutput"></p>
+</div>
 
 <script>
     let canvasElement = document.getElementById("myCanvas");
     let context = canvasElement.getContext("2d");
 
+    // Global state variables
+    let editMode = false;
+
     function getCanvas() {
         return canvasElement;
     }
+    function getCanvasContext() {
+        return context;
+    }
 
     let coordinate = [0, 0];
-    drawDot(htoc(coordinate[0], coordinate[1]));
+    drawDotC(htoc(coordinate[0], coordinate[1]));
     patterns["R-301"].forEach(value => {
         coordinate[0] = coordinate[0] + value[0];
         coordinate[1] = coordinate[1] + value[1];
-        drawDot(htoc(coordinate[0], coordinate[1]))
+        drawDotC(htoc(coordinate[0], coordinate[1]))
     });
 
-    function drawDot(coordinate) {
-        context.fillRect(coordinate[0], coordinate[1], 3, 3);
+    function drawDotC(coordinate) {
+        getCanvasContext().fillRect(coordinate[0], coordinate[1], 3, 3);
+    }
+
+    function drawDotH(coordinate) {
+        let cCoord = htoc(coordinate[0], coordinate[1]);
+        getCanvasContext().fillRect(cCoord[0], cCoord[1], 3, 3);
     }
 
     // Convert human coordinate to canvas coordinate
@@ -47,6 +64,8 @@
             getCanvas().height - y - 40
         ];
     }
+
+    // ctoh = canvas to human
     function ctoh(x, y) {
         return [
             x - getCanvas().width / 2,
@@ -58,6 +77,36 @@
         let rect = getCanvas().getBoundingClientRect();
         let x = event.clientX - rect.left;
         let y = event.clientY - rect.top;
+    });
+
+    ////////////////// Recoil pattern creation //////////////////
+
+    let recoilPattern = [];
+    let coordTracker = [0, 0];
+
+    function createRecoilPattern() {
+        editMode = true;
+        getCanvasContext().clearRect(0, 0, getCanvas().width, getCanvas().height);
+        drawDotC(htoc(0, 0));
+        coordTracker = [0, 0];
+        recoilPattern.length = 0;
+
+        console.log(recoilPattern);
+    }
+
+    getCanvas().addEventListener("mousedown", event => {
+        if (!editMode) { return; }
+
+        let rect = getCanvas().getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+        let newCoord = ctoh(x, y);
+
+        recoilPattern.push([newCoord[0] - coordTracker[0], newCoord[1] - coordTracker[1]]);
+        coordTracker[0] = newCoord[0];
+        coordTracker[1] = newCoord[1];
+        drawDotH(coordTracker);
+        document.getElementById("debugOutput").innerText = recoilPattern;
     });
 </script>
 
