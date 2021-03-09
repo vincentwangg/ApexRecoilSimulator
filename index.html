@@ -6,16 +6,6 @@
 </head>
 <body>
 
-<!-- Recoil patterns -->
-<script>
-    let patterns = {
-        "R-301": [
-            [0, 10],
-            [3, 5]
-        ]
-    }
-</script>
-
 <div id="notifications" style="height:50px">
     <p id="notificationText"></p>
 </div>
@@ -121,24 +111,24 @@
                 trackingPatternY = trackingPattern[index][1];
             }
 
-            let color = (highlightNthShot == -1 || highlightNthShot != index) ? "#007bff" : "#00ffff";
+            let color = (highlightNthShot === -1 || highlightNthShot !== index) ? "#007bff" : "#00ffff";
             mouseTrackingCoord[0] = mouseTrackingCoord[0] - value[0] + trackingPatternX;
             mouseTrackingCoord[1] = mouseTrackingCoord[1] + value[1] + trackingPatternY;
             drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]], color);
 
-            color = (highlightNthShot == -1 || highlightNthShot != index) ? "#000000" : "#00ffff";
+            color = (highlightNthShot === -1 || highlightNthShot !== index) ? "#000000" : "#00ffff";
             outputTrackingCoord[0] += trackingPatternX;
             outputTrackingCoord[1] += trackingPatternY;
             drawDotC([outputTrackingCoord[0], outputTrackingCoord[1]], color);
 
             // Original recoil pattern (as dragged by mouse)
-            color = (highlightNthShot == -1 || highlightNthShot != index) ? "#ff0000" : "#00ffff";
+            color = (highlightNthShot === -1 || highlightNthShot !== index) ? "#ff0000" : "#00ffff";
             antiOriginalRecoilPatternCoord[0] -= value[0];
             antiOriginalRecoilPatternCoord[1] += value[1];
             drawDotC([antiOriginalRecoilPatternCoord[0], antiOriginalRecoilPatternCoord[1]], color);
 
             // Original recoil pattern
-            color = (highlightNthShot == -1 || highlightNthShot != index) ? "#ff8100" : "#00ffff";
+            color = (highlightNthShot === -1 || highlightNthShot !== index) ? "#ff8100" : "#00ffff";
             originalRecoilPatternCoord[0] += value[0];
             originalRecoilPatternCoord[1] -= value[1];
             drawDotC([originalRecoilPatternCoord[0], originalRecoilPatternCoord[1]], color);
