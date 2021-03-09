@@ -30,10 +30,15 @@
     <button id="finishRecoilPatternButton" onclick="finishRecoilPattern()" disabled>Done</button>
     <button id="cancelRecoilPatternButton" onclick="cancelRecoilPattern()" disabled>Cancel</button>
 </div>
-<div id="recoilPatternSimulation">
+<div style="margin-bottom:4px">
     <p>Recoil pattern simulation</p>
     <button id="trackLeftButton" onclick="initiateTrackLeft()" disabled>Track Left</button>
     <button id="trackRightButton" onclick="initiateTrackRight()" disabled>Track Right</button>
+</div>
+<div>
+    <button id="customTrackingButton" onclick="createCustomTrackingPattern()" disabled>Create Custom Tracking Pattern</button>
+    <button id="customTrackingUndoButton" onclick="undoCustomTrackingPatternMove()" disabled>Undo</button>
+    <button id="finishCustomTrackingPatternButton" onclick="finishCustomTrackingPattern()" disabled>Done</button>
     <div>
         <input type="range" min="0" max="50" value="15" class="slider" id="trackingSlider" onchange="onTrackingSliderChange(this.value)" disabled>
     </div>
@@ -45,6 +50,12 @@
     <p>Light Guns</p>
     <button onclick="displayPresetRecoilPattern('R-301')">R-301</button>
     <button onclick="displayPresetRecoilPattern('R-99')">R-99</button>
+</div>
+<div id="referenceLegend">
+    <p>Black - What you need to drag with your mouse</p>
+    <p>Red - Original recoil pattern (as dragged by mouse)</p>
+    <p>Blue - What the output will look like</p>
+    <p>Orange - Gun recoil without control</p>
 </div>
 <div id="outputDiv">
     <p id="output"></p>
@@ -104,19 +115,18 @@
         recoilPatternArray.forEach((value, index) => {
             let trackingPatternX, trackingPatternY;
             if (index >= trackingPattern.length) {
-                trackingPatternX = 0;
-                trackingPatternY = 0;
+                return;
             } else {
                 trackingPatternX = trackingPattern[index][0];
                 trackingPatternY = trackingPattern[index][1];
             }
 
-            let color = (highlightNthShot == -1 || highlightNthShot != index) ? "#000000" : "#00ffff";
+            let color = (highlightNthShot == -1 || highlightNthShot != index) ? "#007bff" : "#00ffff";
             mouseTrackingCoord[0] = mouseTrackingCoord[0] - value[0] + trackingPatternX;
             mouseTrackingCoord[1] = mouseTrackingCoord[1] + value[1] + trackingPatternY;
             drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]], color);
 
-            color = (highlightNthShot == -1 || highlightNthShot != index) ? "#0000ff" : "#00ffff";
+            color = (highlightNthShot == -1 || highlightNthShot != index) ? "#000000" : "#00ffff";
             outputTrackingCoord[0] += trackingPatternX;
             outputTrackingCoord[1] += trackingPatternY;
             drawDotC([outputTrackingCoord[0], outputTrackingCoord[1]], color);
@@ -158,6 +168,7 @@
     function hardResetCanvas() {
         editMode = false;
         simulationMode = false;
+        simulatingTrackingMode = false;
         clearCanvas();
     }
 
@@ -177,6 +188,13 @@
             x - getCanvas().width / 2,
             getCanvas().height - y - 40
         ];
+    }
+
+    function showNotificationText(text) {
+        document.getElementById("notificationText").innerText = text;
+        setTimeout(() => {
+            document.getElementById("notificationText").innerText = "";
+        }, 1000);
     }
 
     ////////////////// Loaded recoil pattern //////////////////
@@ -255,6 +273,7 @@
     ////////////////// Recoil simulation //////////////////
 
     let simulationMode = false;
+    let simulationCreationMode = false;
     let trackingSimulationPattern = null;
     let startingCoordForSimulation = null;
     let simulatingTrackingMode = null;
@@ -262,6 +281,8 @@
     function updateSimulationButtons() {
         document.getElementById("trackLeftButton").disabled = loadedRecoilPattern == null;
         document.getElementById("trackRightButton").disabled = loadedRecoilPattern == null;
+        document.getElementById("customTrackingButton").disabled = loadedRecoilPattern == null;
+        document.getElementById("finishCustomTrackingPatternButton").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
         document.getElementById("trackingSlider").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
         document.getElementById("playSimulation").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
         document.getElementById("loopSimulation").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
@@ -293,16 +314,58 @@
         trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([50, 0]);
     }
 
+    let trackingPattern = [];
+    let previousCoord = null;
+    let customTrackingPatternStarted = false;
+
+    function createCustomTrackingPattern() {
+        hardResetCanvas();
+        simulationCreationMode = true;
+
+        trackingPattern.length = 0;
+        previousCoord = [0, 0];
+        customTrackingPatternStarted = false;
+    }
+
+    getCanvas().addEventListener("mousedown", event => {
+        if (!simulationCreationMode) { return; }
+
+        let rect = getCanvas().getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+        drawDotC([x, y]);
+
+        if (customTrackingPatternStarted) {
+            trackingPattern.push([x - previousCoord[0], y - previousCoord[1]]);
+        } else {
+            // trackingPattern.push([0, 0]);
+            customTrackingPatternStarted = true;
+        }
+        previousCoord = [x, y];
+        document.getElementById("finishCustomTrackingPatternButton").disabled = false;
+    });
+
+    function finishCustomTrackingPattern() {
+        hardResetCanvas();
+        showNotificationText("Click anywhere to show the tracking pattern");
+
+        simulationMode = true;
+        simulationCreationMode = false;
+        simulatingTrackingMode = "custom";
+
+        trackingSimulationPattern = trackingPattern;
+    }
+
     function onTrackingSliderChange(sliderValue) {
-        console.log(sliderValue);
         clearCanvas();
         let adjustedSliderValue;
         if (simulatingTrackingMode === "left") {
             adjustedSliderValue = sliderValue * -1;
+            trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([adjustedSliderValue, 0]);
         } else if (simulatingTrackingMode === "right") {
             adjustedSliderValue = sliderValue * 1;
+            trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([adjustedSliderValue, 0]);
         }
-        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([adjustedSliderValue, 0]);
         drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern);
     }
 
@@ -325,7 +388,7 @@
         let iterationNum = 0;
         function startSimulation() {
             let timerId = setInterval(() => {
-                if (iterationNum < loadedRecoilPattern.length) {
+                if (iterationNum < Math.min(loadedRecoilPattern.length, trackingSimulationPattern.length)) {
                     clearCanvas();
                     drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern, iterationNum);
                     new Audio('r301.mp3').play();
@@ -359,6 +422,7 @@
         let x = event.clientX - rect.left;
         let y = event.clientY - rect.top;
         startingCoordForSimulation = [x, y];
+        clearCanvas();
         updateSimulationButtons();
         onTrackingSliderChange(15);
 
