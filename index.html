@@ -9,49 +9,59 @@
 <div id="notifications" style="height:50px">
     <p id="notificationText"></p>
 </div>
-<canvas id="myCanvas" width="800" height="600" style="border: 1px solid black;"></canvas>
-<div>
-    <p id="currentRecoilPattern">Current loaded recoil pattern: None</p>
-</div>
-<div id="recoilPatternCreationPanel">
-    <p>Recoil pattern creation/edit</p>
-    <button id="createRecoilPatternButton" onclick="createRecoilPattern()">Create Recoil Pattern</button>
-    <button id="undoRecoilPatternButton" onclick="undoRecoilPatternMove()" disabled>Undo</button>
-    <button id="finishRecoilPatternButton" onclick="finishRecoilPattern()" disabled>Done</button>
-    <button id="cancelRecoilPatternButton" onclick="cancelRecoilPattern()" disabled>Cancel</button>
-</div>
-<div style="margin-bottom:4px">
-    <p>Recoil pattern simulation</p>
-    <button id="trackLeftButton" onclick="initiateTrackLeft()" disabled>Track Left</button>
-    <button id="trackRightButton" onclick="initiateTrackRight()" disabled>Track Right</button>
+<div style="float: left; margin-right: 20px">
+    <canvas id="myCanvas" width="800" height="600" style="border: 1px solid black;"></canvas>
 </div>
 <div>
-    <button id="customTrackingButton" onclick="createCustomTrackingPattern()" disabled>Create Custom Tracking Pattern</button>
-    <button id="customTrackingUndoButton" onclick="undoCustomTrackingPatternMove()" disabled>Undo</button>
-    <button id="finishCustomTrackingPatternButton" onclick="finishCustomTrackingPattern()" disabled>Done</button>
     <div>
-        <input type="range" min="0" max="50" value="15" class="slider" id="trackingSlider" onchange="onTrackingSliderChange(this.value)" disabled>
+        <p id="currentRecoilPattern">Current loaded recoil pattern: None</p>
     </div>
-    <button id="playSimulation" onclick="playSimulation()" disabled>Play</button>
-    <button id="loopSimulation" onclick="loopSimulation()" disabled>Loop</button>
-    <button id="stopSimulation" onclick="stopSimulation()" disabled>Stop</button>
-</div>
-<div id="presetRecoilPatternsDiv">
-    <p>Light Guns</p>
-    <button onclick="displayPresetRecoilPattern('R-301')">R-301</button>
-    <button onclick="displayPresetRecoilPattern('R-99')">R-99</button>
-</div>
-<div id="referenceLegend">
-    <p>Black - What you need to drag with your mouse</p>
-    <p>Red - Original recoil pattern (as dragged by mouse)</p>
-    <p>Blue - What the output will look like</p>
-    <p>Orange - Gun recoil without control</p>
-</div>
-<div id="outputDiv">
-    <p id="output"></p>
-</div>
-<div id="debug">
-    <p id="debugOutput"></p>
+    <div id="recoilPatternCreationPanel">
+        <p>Recoil pattern creation/edit</p>
+        <button id="createRecoilPatternButton" onclick="createRecoilPattern()">Create Recoil Pattern</button>
+        <button id="undoRecoilPatternButton" onclick="undoRecoilPatternMove()" disabled>Undo</button>
+        <button id="finishRecoilPatternButton" onclick="finishRecoilPattern()" disabled>Done</button>
+        <button id="cancelRecoilPatternButton" onclick="cancelRecoilPattern()" disabled>Cancel</button>
+    </div>
+    <div style="margin-bottom:10px">
+        <p>Recoil pattern simulation</p>
+        <button id="trackLeftButton" onclick="initiateTrackLeft()" disabled>Track Left</button>
+        <button id="trackRightButton" onclick="initiateTrackRight()" disabled>Track Right</button>
+        <div>
+            <input type="range" min="0" max="50" value="15" class="slider" id="trackingSlider" onchange="onTrackingSliderChange(this.value)" disabled>
+        </div>
+    </div>
+    <div style="margin-bottom: 4px">
+        <button id="customTrackingButton" onclick="createCustomTrackingPattern()" disabled>Create Custom Tracking Pattern</button>
+        <button id="customTrackingUndoButton" onclick="undoCustomTrackingPatternMove()" disabled>Undo</button>
+        <button id="finishCustomTrackingPatternButton" onclick="finishCustomTrackingPattern()" disabled>Done</button>
+    </div>
+    <div style="margin-bottom: 4px">
+        <button id="customTrackingWithMouseDownButton" onclick="createCustomTrackingPatternWithMouseDown()" disabled>Create Tracking By Holding Down Mouse</button>
+        <button id="finishCustomTrackingPatternWithMouseDownButton" onclick="finishCustomTrackingPatternWithMouseDown()" disabled>Done</button>
+    </div>
+    <div style="margin-bottom: 4px">
+        <button id="playSimulation" onclick="playSimulation()" disabled>Play</button>
+        <button id="loopSimulation" onclick="loopSimulation()" disabled>Loop</button>
+        <button id="stopSimulation" onclick="stopSimulation()" disabled>Stop</button>
+    </div>
+    <div id="presetRecoilPatternsDiv">
+        <p>Light Guns</p>
+        <button onclick="displayPresetRecoilPattern('R-301')">R-301</button>
+        <button onclick="displayPresetRecoilPattern('R-99')">R-99</button>
+    </div>
+    <div id="referenceLegend">
+        <p>Black - What you need to drag with your mouse</p>
+        <p>Red - Original recoil pattern (as dragged by mouse)</p>
+        <p>Blue - What the output will look like</p>
+        <p>Orange - Gun recoil without control</p>
+    </div>
+    <div id="outputDiv">
+        <p id="output"></p>
+    </div>
+    <div id="debug">
+        <p id="debugOutput"></p>
+    </div>
 </div>
 
 <script>
@@ -357,6 +367,10 @@
             trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([adjustedSliderValue, 0]);
         }
         drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern);
+    }
+
+    function createCustomTrackingPatternWithMouseDown() {
+
     }
 
     function playSimulation() {
