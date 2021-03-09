@@ -19,7 +19,7 @@
 <div id="notifications" style="height:50px">
     <p id="notificationText"></p>
 </div>
-<canvas id="myCanvas" width="1500" height="800" style="border: 1px solid black;"></canvas>
+<canvas id="myCanvas" width="800" height="600" style="border: 1px solid black;"></canvas>
 <div>
     <p id="currentRecoilPattern">Current loaded recoil pattern: None</p>
 </div>
@@ -35,8 +35,11 @@
     <button id="trackLeftButton" onclick="initiateTrackLeft()" disabled>Track Left</button>
     <button id="trackRightButton" onclick="initiateTrackRight()" disabled>Track Right</button>
     <div>
-        <input type="range" min="0" max="100" value="50" class="slider" id="trackingSlider" onchange="onTrackingSliderChange(this.value)" disabled>
+        <input type="range" min="0" max="50" value="15" class="slider" id="trackingSlider" onchange="onTrackingSliderChange(this.value)" disabled>
     </div>
+    <button id="playSimulation" onclick="playSimulation()" disabled>Play</button>
+    <button id="loopSimulation" onclick="loopSimulation()" disabled>Loop</button>
+    <button id="stopSimulation" onclick="stopSimulation()" disabled>Stop</button>
 </div>
 <div id="presetRecoilPatternsDiv">
     <p>Light Guns</p>
@@ -68,12 +71,12 @@
 
     function clearCanvas() {
         getCanvasContext().clearRect(0, 0, getCanvas().width, getCanvas().height);
-        base_image = new Image();
-        base_image.src = 'img.png';
-        getCanvasContext().globalAlpha = 0.4;
-        base_image.onload = function(){
-            getCanvasContext().drawImage(base_image, 0, 0);
-        }
+        // base_image = new Image();
+        // base_image.src = 'img.png';
+        // getCanvasContext().globalAlpha = 0.4;
+        // base_image.onload = function(){
+        //     getCanvasContext().drawImage(base_image, 0, 0);
+        // }
     }
 
     function drawRecoilPattern(recoilPatternArray, shouldLockAndClearCanvas = true) {
@@ -92,7 +95,7 @@
         });
     }
 
-    function drawRecoilPatternSimulation(recoilPatternArray, startingCCoord, trackingPattern) {
+    function drawRecoilPatternSimulation(recoilPatternArray, startingCCoord, trackingPattern, highlightNthShot = -1) {
         let mouseTrackingCoord = [startingCCoord[0], startingCCoord[1]];
         let outputTrackingCoord = [startingCCoord[0], startingCCoord[1]];
         let antiOriginalRecoilPatternCoord = [startingCCoord[0], startingCCoord[1]];
@@ -108,23 +111,27 @@
                 trackingPatternY = trackingPattern[index][1];
             }
 
+            let color = (highlightNthShot == -1 || highlightNthShot != index) ? "#000000" : "#00ffff";
             mouseTrackingCoord[0] = mouseTrackingCoord[0] - value[0] + trackingPatternX;
             mouseTrackingCoord[1] = mouseTrackingCoord[1] + value[1] + trackingPatternY;
-            drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]]);
+            drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]], color);
 
+            color = (highlightNthShot == -1 || highlightNthShot != index) ? "#0000ff" : "#00ffff";
             outputTrackingCoord[0] += trackingPatternX;
             outputTrackingCoord[1] += trackingPatternY;
-            drawDotC([outputTrackingCoord[0], outputTrackingCoord[1]], "#0000ff");
+            drawDotC([outputTrackingCoord[0], outputTrackingCoord[1]], color);
 
             // Original recoil pattern (as dragged by mouse)
+            color = (highlightNthShot == -1 || highlightNthShot != index) ? "#ff0000" : "#00ffff";
             antiOriginalRecoilPatternCoord[0] -= value[0];
             antiOriginalRecoilPatternCoord[1] += value[1];
-            drawDotC([antiOriginalRecoilPatternCoord[0], antiOriginalRecoilPatternCoord[1]], "#ff0000");
+            drawDotC([antiOriginalRecoilPatternCoord[0], antiOriginalRecoilPatternCoord[1]], color);
 
             // Original recoil pattern
+            color = (highlightNthShot == -1 || highlightNthShot != index) ? "#ff8100" : "#00ffff";
             originalRecoilPatternCoord[0] += value[0];
             originalRecoilPatternCoord[1] -= value[1];
-            drawDotC([originalRecoilPatternCoord[0], originalRecoilPatternCoord[1]], "#ff8100");
+            drawDotC([originalRecoilPatternCoord[0], originalRecoilPatternCoord[1]], color);
         });
     }
 
@@ -175,6 +182,8 @@
     ////////////////// Loaded recoil pattern //////////////////
 
     let loadedRecoilPattern = null;
+    let loadedProfileName = null;
+    let loadedProfileRateOfFire = null;
 
     ////////////////// Recoil pattern creation //////////////////
 
@@ -254,6 +263,8 @@
         document.getElementById("trackLeftButton").disabled = loadedRecoilPattern == null;
         document.getElementById("trackRightButton").disabled = loadedRecoilPattern == null;
         document.getElementById("trackingSlider").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
+        document.getElementById("playSimulation").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
+        document.getElementById("loopSimulation").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
     }
 
     function initiateTrackLeft() {
@@ -283,6 +294,7 @@
     }
 
     function onTrackingSliderChange(sliderValue) {
+        console.log(sliderValue);
         clearCanvas();
         let adjustedSliderValue;
         if (simulatingTrackingMode === "left") {
@@ -291,8 +303,53 @@
             adjustedSliderValue = sliderValue * 1;
         }
         trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([adjustedSliderValue, 0]);
-        console.log(trackingSimulationPattern);
         drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern);
+    }
+
+    function playSimulation() {
+        let waitTimer = 3;
+        let waitTimerId = setInterval(() => {
+            if (waitTimer > 0) {
+                document.getElementById("notificationText").innerText = '' + waitTimer;
+                waitTimer--;
+            } else {
+                document.getElementById("notificationText").innerText = 'Go!';
+                setTimeout(() => {
+                    document.getElementById("notificationText").innerText = "";
+                }, 1000);
+                clearTimeout(waitTimerId);
+                startSimulation();
+            }
+        }, 1000);
+
+        let iterationNum = 0;
+        function startSimulation() {
+            let timerId = setInterval(() => {
+                if (iterationNum < loadedRecoilPattern.length) {
+                    clearCanvas();
+                    drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern, iterationNum);
+                    new Audio('r301.mp3').play();
+                    iterationNum++;
+                } else {
+                    clearTimeout(timerId);
+                }
+            }, loadedProfileRateOfFire);
+        }
+    }
+
+    let loopTimerId = null;
+    function loopSimulation() {
+        loopTimerId = setInterval(() => playSimulation(), loadedProfileRateOfFire * loadedRecoilPattern.length + 4000);
+        document.getElementById("playSimulation").disabled = true;
+        document.getElementById("loopSimulation").disabled = true;
+        document.getElementById("stopSimulation").disabled = false;
+    }
+
+    function stopSimulation() {
+        clearTimeout(loopTimerId);
+        document.getElementById("playSimulation").disabled = false;
+        document.getElementById("loopSimulation").disabled = false;
+        document.getElementById("stopSimulation").disabled = true;
     }
 
     getCanvas().addEventListener("mousedown", event => {
@@ -303,6 +360,7 @@
         let y = event.clientY - rect.top;
         startingCoordForSimulation = [x, y];
         updateSimulationButtons();
+        onTrackingSliderChange(15);
 
         drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern);
     });
@@ -319,9 +377,15 @@
         "": [],
         "": [],
     }
+    let presetRecoilRateOfFire = {
+        "R-301": 816
+    }
 
     function displayPresetRecoilPattern(gunName) {
-        loadedRecoilPattern = presetRecoilPatterns[gunName]
+        loadedRecoilPattern = presetRecoilPatterns[gunName];
+        loadedProfileName = gunName;
+        loadedProfileRateOfFire = 1000 / (presetRecoilRateOfFire[gunName] / 60)
+
         drawRecoilPattern(loadedRecoilPattern);
         updateSimulationButtons();
         document.getElementById("currentRecoilPattern").innerText = "Current loaded recoil pattern: " + gunName;
