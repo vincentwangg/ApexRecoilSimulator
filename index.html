@@ -481,7 +481,6 @@
     function updateMouseMovementCustomTrackingPattern(event) {
         xTrackingPattern += event.movementX;
         yTrackingPattern += event.movementY;
-        setDebugText('x: ' + event.movementX + ', y: ' + event.movementY + ', xTrackingPattern: ' + xTrackingPattern + ', y: ' + yTrackingPattern);
     }
 
     function playSimulation() {
@@ -624,7 +623,7 @@
         practiceModeIntervalTimerId = null;
         getCanvas().removeEventListener("mousedown", onPracticeModeMouseDown);
         getCanvas().removeEventListener("mouseup", cancelPracticeMode);
-        document.removeEventListener("mousemove", onPracticeModeMouseMove);
+        getCanvas().removeEventListener("mousemove", onPracticeModeMouseMove);
     }
 
     ////////////////// Preset recoil patterns //////////////////
