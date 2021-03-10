@@ -45,6 +45,13 @@
         <button id="loopSimulation" onclick="loopSimulation()" disabled>Loop</button>
         <button id="stopSimulation" onclick="stopSimulation()" disabled>Stop</button>
     </div>
+    <div>
+        <p>Practice Mode</p>
+        <p style="display: inline-block; padding: 0; margin: 0">Sensitivity: </p>
+        <input id="sensitivity" type="number" style="width: 50px" value="1">
+        <button id="startPracticeModeButton" onclick="startPracticeMode()">Start</button>
+        <button id="cancelPracticeModeButton" onclick="cancelPracticeMode()">Cancel</button>
+    </div>
     <div id="presetRecoilPatternsDiv">
         <p>Light Guns</p>
         <button onclick="displayPresetRecoilPattern('R-301')">R-301</button>
@@ -411,10 +418,8 @@
         let totalDots = loadedRecoilPattern.length;
         let numDots = 0;
         customTrackingPatternMouseDownTimerId = setInterval(() => {
-            setDebugText2('numdots = ' + numDots);
             if (numDots < totalDots) {
                 let newDotLocation = [previousDotLocation[0] + xTrackingPattern, previousDotLocation[1] + yTrackingPattern];
-                setDebugText3(newDotLocation);
                 drawDotC([newDotLocation[0], newDotLocation[1]]);
                 trackingPattern.push([xTrackingPattern, yTrackingPattern]);
                 previousDotLocation = newDotLocation;
@@ -506,6 +511,71 @@
 
         drawRecoilPatternSimulation(loadedRecoilPattern, startingCoordForSimulation, trackingSimulationPattern);
     });
+
+    ////////////////// Preset recoil patterns //////////////////
+
+    let practiceModeIntervalTimerId = null;
+    function startPracticeMode() {
+        hardResetCanvas();
+
+        getCanvas().addEventListener("mousedown", onPracticeModeMouseDown);
+        getCanvas().addEventListener("mouseup", cancelPracticeMode);
+    }
+
+    function onPracticeModeMouseDown(event) {
+        getCanvas().requestPointerLock();
+        let rect = getCanvas().getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+        previousDotLocation = drawDotC([x, y]);
+        let startingCoord = [x, y];
+        xTrackingPattern = 0;
+        yTrackingPattern = 0;
+
+        let totalDots = loadedRecoilPattern.length;
+        let numDots = 0;
+        practiceModeIntervalTimerId = setInterval(() => {
+            setDebugText(numDots);
+            if (numDots < totalDots) {
+                let sens = document.getElementById("sensitivity").value;
+                xTrackingPattern *= sens;
+                yTrackingPattern *= sens;
+                console.log(xTrackingPattern);
+                let newDotLocation = [
+                    previousDotLocation[0] + xTrackingPattern + loadedRecoilPattern[numDots][0],
+                    previousDotLocation[1] + yTrackingPattern - loadedRecoilPattern[numDots][1]
+                ];
+                drawDotC([newDotLocation[0], newDotLocation[1]]);
+                previousDotLocation = newDotLocation;
+                xTrackingPattern = 0;
+                yTrackingPattern = 0;
+                numDots++;
+                new Audio("r301.mp3").play();
+                drawRecoilPatternSimulation(loadedRecoilPattern, startingCoord, Array(loadedRecoilPattern.length).fill([0, 0]), numDots);
+            } else {
+                clearInterval(practiceModeIntervalTimerId);
+                practiceModeIntervalTimerId = null;
+            }
+        }, loadedProfileRateOfFire);
+
+        document.addEventListener("mousemove", onPracticeModeMouseMove);
+    }
+
+    function onPracticeModeMouseMove(event) {
+        xTrackingPattern += event.movementX;
+        yTrackingPattern += event.movementY;
+    }
+
+    function cancelPracticeMode() {
+        document.exitPointerLock();
+        if (practiceModeIntervalTimerId) {
+            clearInterval(practiceModeIntervalTimerId);
+        }
+        practiceModeIntervalTimerId = null;
+        getCanvas().removeEventListener("mousedown", onPracticeModeMouseDown);
+        getCanvas().removeEventListener("mouseup", cancelPracticeMode);
+        document.removeEventListener("mousemove", onPracticeModeMouseMove);
+    }
 
     ////////////////// Preset recoil patterns //////////////////
 
