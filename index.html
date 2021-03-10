@@ -137,7 +137,11 @@
             drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]], color);
 
             color = (highlightNthShot === -1 || highlightNthShot !== index) ? "#000000" : "#00ffff";
-            color = practiceMode ? "#cb8443" : "#000000";
+            if (highlightNthShot !== index) {
+                color = practiceMode ? "#ffffff" : color;
+            } else {
+                color = practiceMode ? "#ff9600" : color;
+            }
             outputTrackingCoord[0] += trackingPatternX;
             outputTrackingCoord[1] += trackingPatternY;
             drawDotC([outputTrackingCoord[0], outputTrackingCoord[1]], color);
