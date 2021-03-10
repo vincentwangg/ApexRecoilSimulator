@@ -10,7 +10,7 @@
     <p id="notificationText"></p>
 </div>
 <div style="float: left; margin-right: 20px">
-    <canvas id="myCanvas" width="800" height="600" style="border: 1px solid black;"></canvas>
+    <canvas id="myCanvas" width="800" height="900" style="border: 1px solid black;"></canvas>
 </div>
 <div>
     <div>
@@ -49,7 +49,7 @@
     <div>
         <p>Practice Mode</p>
         <p style="display: inline-block; padding: 0; margin: 0">Sensitivity: </p>
-        <input id="sensitivity" type="number" style="width: 50px" value="1">
+        <input id="sensitivity" type="number" style="width: 50px" value="1" step="0.1">
         <button id="startPracticeModeButton" onclick="startPracticeMode()">Start</button>
         <button id="cancelPracticeModeButton" onclick="cancelPracticeMode()">Cancel</button>
     </div>
@@ -93,7 +93,7 @@
     function clearCanvas() {
         getCanvasContext().clearRect(0, 0, getCanvas().width, getCanvas().height);
         // base_image = new Image();
-        // base_image.src = 'img.png';
+        // base_image.src = 'r99.png';
         // getCanvasContext().globalAlpha = 0.4;
         // base_image.onload = function(){
         //     getCanvasContext().drawImage(base_image, 0, 0);
@@ -138,7 +138,7 @@
 
             color = (highlightNthShot === -1 || highlightNthShot !== index) ? "#000000" : "#00ffff";
             if (highlightNthShot !== index) {
-                color = practiceMode ? "#ffffff" : color;
+                color = practiceMode ? "#000000" : color;
             } else {
                 color = practiceMode ? "#ff9600" : color;
             }
@@ -328,7 +328,7 @@
         simulationMode = true;
         simulatingTrackingMode = "left";
 
-        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([-50, 0]);
+        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([-1 * document.getElementById("trackingSlider").value, 0]);
         loadedTrackingPattern = trackingSimulationPattern;
         document.getElementById("currentTrackingPattern").innerText = "Current loaded tracking pattern: left";
     }
@@ -343,7 +343,7 @@
         simulationMode = true;
         simulatingTrackingMode = "right";
 
-        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([50, 0]);
+        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([document.getElementById("trackingSlider").value, 0]);
         loadedTrackingPattern = trackingSimulationPattern;
         document.getElementById("currentTrackingPattern").innerText = "Current loaded tracking pattern: right";
     }
@@ -538,12 +538,14 @@
         getCanvas().addEventListener("mouseup", cancelPracticeMode);
     }
 
+    let previousDotLocationForMouse = null;
     function onPracticeModeMouseDown(event) {
         getCanvas().requestPointerLock();
         let rect = getCanvas().getBoundingClientRect();
         let x = event.clientX - rect.left;
         let y = event.clientY - rect.top;
         previousDotLocation = drawDotC([x, y]);
+        previousDotLocationForMouse = drawDotC([x, y]);
         let startingCoord = [x, y];
         xTrackingPattern = 0;
         yTrackingPattern = 0;
@@ -556,13 +558,18 @@
                 let sens = document.getElementById("sensitivity").value;
                 xTrackingPattern *= sens;
                 yTrackingPattern *= sens;
-                console.log(xTrackingPattern);
                 let newDotLocation = [
                     previousDotLocation[0] + xTrackingPattern + loadedRecoilPattern[numDots][0],
                     previousDotLocation[1] + yTrackingPattern - loadedRecoilPattern[numDots][1]
                 ];
                 drawDotC([newDotLocation[0], newDotLocation[1]]);
+                let newDotLocationForMouse = [
+                    previousDotLocationForMouse[0] + xTrackingPattern,
+                    previousDotLocationForMouse[1] + yTrackingPattern
+                ];
+                drawDotC([newDotLocationForMouse[0], newDotLocationForMouse[1]], "#0df0f3");
                 previousDotLocation = newDotLocation;
+                previousDotLocationForMouse = newDotLocationForMouse;
                 xTrackingPattern = 0;
                 yTrackingPattern = 0;
                 numDots++;
@@ -605,7 +612,7 @@
 
     let presetRecoilPatterns = {
         "R-301": [[17,36],[-2,61],[25,32],[1,31],[-5,26],[-8,15],[4,21],[25,-2],[9,7],[20,3],[3,5],[-27,23],[-13,12],[-19,0],[-24,-1],[-18,-5],[-5,4],[-7,0],[2,17],[-1,11],[20,6],[17,-14],[15,-11],[13,11],[11,12],[-19,6],[-1,-4]],
-        "R-99": [],
+        "R-99": [[1,17],[1,13],[-8,21],[4,22],[8,34],[9,33],[13,13],[8,38],[3,22],[-13,26],[-8,14],[-10,18],[0,11],[5,-1],[12,-1],[12,17],[4,8],[-5,13],[-16,-1],[-7,8],[-8,5],[-13,5],[-14,5],[24,7],[8,2],[13,-1]],
         "RE-45": [],
         "": [],
         "": [],
@@ -614,7 +621,8 @@
         "": [],
     }
     let presetRecoilRateOfFire = {
-        "R-301": 816
+        "R-301": 816,
+        "R-99": 1060
     }
 
     function displayPresetRecoilPattern(gunName) {
