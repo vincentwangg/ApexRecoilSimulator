@@ -288,7 +288,6 @@
     ////////////////// Recoil simulation //////////////////
 
     let simulationMode = false;
-    let simulationCreationMode = false;
     let trackingSimulationPattern = null;
     let startingCoordForSimulation = null;
     let simulatingTrackingMode = null;
@@ -336,16 +335,15 @@
 
     function createCustomTrackingPattern() {
         hardResetCanvas();
-        simulationCreationMode = true;
 
         trackingPattern.length = 0;
         previousCoord = [0, 0];
         customTrackingPatternStarted = false;
+
+        getCanvas().addEventListener("mousedown", mouseListenerForSimulationCreation);
     }
 
-    getCanvas().addEventListener("mousedown", event => {
-        if (!simulationCreationMode) { return; }
-
+    function mouseListenerForSimulationCreation(event) {
         let rect = getCanvas().getBoundingClientRect();
         let x = event.clientX - rect.left;
         let y = event.clientY - rect.top;
@@ -359,16 +357,16 @@
         }
         previousCoord = [x, y];
         document.getElementById("finishCustomTrackingPatternButton").disabled = false;
-    });
+    }
 
     function finishCustomTrackingPattern() {
+        getCanvas().removeEventListener("mousedown", mouseListenerForSimulationCreation);
         hardResetCanvas();
         updateSimulationButtons();
         document.getElementById("finishCustomTrackingPatternWithMouseDownButton").disabled = true;
         showNotificationText("Click anywhere to show the tracking pattern");
 
         simulationMode = true;
-        simulationCreationMode = false;
         simulatingTrackingMode = "custom";
 
         trackingSimulationPattern = trackingPattern;
