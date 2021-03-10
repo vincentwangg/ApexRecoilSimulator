@@ -38,7 +38,7 @@
     </div>
     <div style="margin-bottom: 4px">
         <button id="customTrackingWithMouseDownButton" onclick="createCustomTrackingPatternWithMouseDown()" disabled>Create Tracking By Holding Down Mouse</button>
-        <button id="finishCustomTrackingPatternWithMouseDownButton" onclick="finishCustomTrackingPatternWithMouseDown()" disabled>Done</button>
+        <button id="finishCustomTrackingPatternWithMouseDownButton" onclick="finishCustomTrackingPattern()" disabled>Done</button>
     </div>
     <div style="margin-bottom: 4px">
         <button id="playSimulation" onclick="playSimulation()" disabled>Play</button>
@@ -61,6 +61,8 @@
     </div>
     <div id="debug">
         <p id="debugOutput"></p>
+        <p id="debugOutput2"></p>
+        <p id="debugOutput3"></p>
     </div>
 </div>
 
@@ -148,12 +150,21 @@
     function drawDotC(coordinate, color = "#000000") {
         getCanvasContext().fillStyle = color;
         getCanvasContext().fillRect(coordinate[0], coordinate[1], dotSize, dotSize);
+        return coordinate;
     }
 
     function drawDotH(coordinate, color = "#000000") {
         let cCoord = htoc(coordinate[0], coordinate[1]);
         getCanvasContext().fillStyle = color;
         getCanvasContext().fillRect(cCoord[0], cCoord[1], dotSize, dotSize);
+        return coordinate;
+    }
+
+    function drawDotInCanvasCenter(color = "#000000") {
+        let dotLocation = [getCanvas().width / 2, getCanvas().height / 2];
+        getCanvasContext().fillStyle = color;
+        getCanvasContext().fillRect(dotLocation[0], dotLocation[1], dotSize, dotSize);
+        return dotLocation;
     }
 
     function eraseDotC(coordinate) {
@@ -188,6 +199,10 @@
             x - getCanvas().width / 2,
             getCanvas().height - y - 40
         ];
+    }
+
+    function convertRateOfFireToMillisInterval(rateOfFireRPM) {
+        return 1000 / (rateOfFireRPM / 60);
     }
 
     function showNotificationText(text) {
@@ -282,6 +297,7 @@
         document.getElementById("trackLeftButton").disabled = loadedRecoilPattern == null;
         document.getElementById("trackRightButton").disabled = loadedRecoilPattern == null;
         document.getElementById("customTrackingButton").disabled = loadedRecoilPattern == null;
+        document.getElementById("customTrackingWithMouseDownButton").disabled = loadedRecoilPattern == null;
         document.getElementById("finishCustomTrackingPatternButton").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
         document.getElementById("trackingSlider").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
         document.getElementById("playSimulation").disabled = !(loadedRecoilPattern != null && startingCoordForSimulation != null);
@@ -347,6 +363,8 @@
 
     function finishCustomTrackingPattern() {
         hardResetCanvas();
+        updateSimulationButtons();
+        document.getElementById("finishCustomTrackingPatternWithMouseDownButton").disabled = true;
         showNotificationText("Click anywhere to show the tracking pattern");
 
         simulationMode = true;
@@ -370,7 +388,65 @@
     }
 
     function createCustomTrackingPatternWithMouseDown() {
+        hardResetCanvas();
 
+        document.getElementById("customTrackingButton").disabled = true;
+        document.getElementById("customTrackingWithMouseDownButton").disabled = true;
+        document.getElementById("finishCustomTrackingPatternWithMouseDownButton").disabled = false;
+
+        getCanvas().addEventListener("mousedown", mouseDownCustomTrackingPattern);
+        getCanvas().addEventListener("mouseup", mouseUpCustomTrackingPattern);
+        document.addEventListener("mousemove", updateMouseMovementCustomTrackingPattern, false);
+    }
+
+    let customTrackingPatternMouseDownTimerId = null;
+    function mouseDownCustomTrackingPattern(event) {
+        trackingPattern = [];
+
+        let rect = getCanvas().getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+        previousDotLocation = drawDotC([x, y]);
+        xTrackingPattern = 0;
+        yTrackingPattern = 0;
+
+        let totalDots = loadedRecoilPattern.length;
+        let numDots = 0;
+        customTrackingPatternMouseDownTimerId = setInterval(() => {
+            setDebugText2('numdots = ' + numDots);
+            if (numDots < totalDots) {
+                let newDotLocation = [previousDotLocation[0] + xTrackingPattern, previousDotLocation[1] + yTrackingPattern];
+                setDebugText3(newDotLocation);
+                drawDotC([newDotLocation[0], newDotLocation[1]]);
+                trackingPattern.push([xTrackingPattern, yTrackingPattern]);
+                previousDotLocation = newDotLocation;
+                xTrackingPattern = 0;
+                yTrackingPattern = 0;
+                numDots++;
+            } else {
+                clearInterval(customTrackingPatternMouseDownTimerId);
+                customTrackingPatternMouseDownTimerId = null;
+            }
+        }, loadedProfileRateOfFire);
+    }
+
+    function mouseUpCustomTrackingPattern() {
+        clearInterval(customTrackingPatternMouseDownTimerId);
+        customTrackingPatternMouseDownTimerId = null;
+        getCanvas().removeEventListener("mousedown", mouseDownCustomTrackingPattern);
+        getCanvas().removeEventListener("mouseup", mouseUpCustomTrackingPattern);
+        document.removeEventListener("mousemove", updateMouseMovementCustomTrackingPattern);
+        document.getElementById("customTrackingWithMouseDownButton").disabled = false;
+        document.getElementById("finishCustomTrackingPatternWithMouseDownButton").disabled = false;
+    }
+
+    let xTrackingPattern = 0;
+    let yTrackingPattern = 0;
+    let previousDotLocation = null;
+    function updateMouseMovementCustomTrackingPattern(event) {
+        xTrackingPattern += event.movementX;
+        yTrackingPattern += event.movementY;
+        setDebugText('x: ' + event.movementX + ', y: ' + event.movementY + ', xTrackingPattern: ' + xTrackingPattern + ', y: ' + yTrackingPattern);
     }
 
     function playSimulation() {
@@ -457,6 +533,19 @@
         drawRecoilPattern(loadedRecoilPattern);
         updateSimulationButtons();
         document.getElementById("currentRecoilPattern").innerText = "Current loaded recoil pattern: " + gunName;
+    }
+</script>
+
+<script>
+    // Debugging functions
+    function setDebugText(text) {
+        document.getElementById("debugOutput").innerText = text;
+    }
+    function setDebugText2(text) {
+        document.getElementById("debugOutput2").innerText = text;
+    }
+    function setDebugText3(text) {
+        document.getElementById("debugOutput3").innerText = text;
     }
 </script>
 
