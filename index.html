@@ -556,6 +556,7 @@
         practiceMode = true;
         getCanvas().addEventListener("mousedown", onPracticeModeMouseDown);
         getCanvas().addEventListener("mouseup", cancelPracticeMode);
+        getCanvas().addEventListener("mousemove", onPracticeModeMouseMove)
     }
 
     let previousDotLocationForMouse = null;
@@ -607,8 +608,6 @@
                 practiceModeIntervalTimerId = null;
             }
         }, loadedProfileRateOfFire);
-
-        document.addEventListener("mousemove", onPracticeModeMouseMove);
     }
 
     function onPracticeModeMouseMove(event) {
