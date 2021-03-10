@@ -15,6 +15,7 @@
 <div>
     <div>
         <p id="currentRecoilPattern">Current loaded recoil pattern: None</p>
+        <p id="currentTrackingPattern">Current loaded tracking pattern: None</p>
     </div>
     <div id="recoilPatternCreationPanel">
         <p>Recoil pattern creation/edit</p>
@@ -136,6 +137,7 @@
             drawDotC([mouseTrackingCoord[0], mouseTrackingCoord[1]], color);
 
             color = (highlightNthShot === -1 || highlightNthShot !== index) ? "#000000" : "#00ffff";
+            color = practiceMode ? "#cb8443" : "#000000";
             outputTrackingCoord[0] += trackingPatternX;
             outputTrackingCoord[1] += trackingPatternY;
             drawDotC([outputTrackingCoord[0], outputTrackingCoord[1]], color);
@@ -187,6 +189,7 @@
         editMode = false;
         simulationMode = false;
         simulatingTrackingMode = false;
+        practiceMode = false;
         clearCanvas();
     }
 
@@ -224,6 +227,7 @@
     let loadedRecoilPattern = null;
     let loadedProfileName = null;
     let loadedProfileRateOfFire = null;
+    let loadedTrackingPattern = null;
 
     ////////////////// Recoil pattern creation //////////////////
 
@@ -321,6 +325,8 @@
         simulatingTrackingMode = "left";
 
         trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([-50, 0]);
+        loadedTrackingPattern = trackingSimulationPattern;
+        document.getElementById("currentTrackingPattern").innerText = "Current loaded tracking pattern: left";
     }
 
     function initiateTrackRight() {
@@ -334,6 +340,8 @@
         simulatingTrackingMode = "right";
 
         trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([50, 0]);
+        loadedTrackingPattern = trackingSimulationPattern;
+        document.getElementById("currentTrackingPattern").innerText = "Current loaded tracking pattern: right";
     }
 
     let trackingPattern = [];
@@ -377,6 +385,8 @@
         simulatingTrackingMode = "custom";
 
         trackingSimulationPattern = trackingPattern;
+        loadedTrackingPattern = trackingSimulationPattern;
+        document.getElementById("currentTrackingPattern").innerText = "Current loaded tracking pattern: custom";
     }
 
     function onTrackingSliderChange(sliderValue) {
@@ -514,10 +524,12 @@
 
     ////////////////// Preset recoil patterns //////////////////
 
+    let practiceMode = false;
     let practiceModeIntervalTimerId = null;
     function startPracticeMode() {
         hardResetCanvas();
 
+        practiceMode = true;
         getCanvas().addEventListener("mousedown", onPracticeModeMouseDown);
         getCanvas().addEventListener("mouseup", cancelPracticeMode);
     }
@@ -551,7 +563,14 @@
                 yTrackingPattern = 0;
                 numDots++;
                 new Audio("r301.mp3").play();
-                drawRecoilPatternSimulation(loadedRecoilPattern, startingCoord, Array(loadedRecoilPattern.length).fill([0, 0]), numDots);
+
+                let trackingPatternToUse;
+                if (loadedTrackingPattern) {
+                    trackingPatternToUse = loadedTrackingPattern;
+                } else {
+                    trackingPatternToUse = Array(loadedRecoilPattern.length).fill([0, 0]);
+                }
+                drawRecoilPatternSimulation(loadedRecoilPattern, startingCoord, trackingPatternToUse, numDots);
             } else {
                 clearInterval(practiceModeIntervalTimerId);
                 practiceModeIntervalTimerId = null;
@@ -567,6 +586,7 @@
     }
 
     function cancelPracticeMode() {
+        practiceMode = false;
         document.exitPointerLock();
         if (practiceModeIntervalTimerId) {
             clearInterval(practiceModeIntervalTimerId);
