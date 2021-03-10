@@ -10,7 +10,7 @@
     <p id="notificationText"></p>
 </div>
 <div style="float: left; margin-right: 20px">
-    <canvas id="myCanvas" width="800" height="900" style="border: 1px solid black;"></canvas>
+    <canvas id="myCanvas" width="1000" height="900" style="border: 1px solid black;"></canvas>
 </div>
 <div>
     <div>
@@ -361,7 +361,7 @@
         simulationMode = true;
         simulatingTrackingMode = "right";
 
-        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([document.getElementById("trackingSlider").value, 0]);
+        trackingSimulationPattern = Array(loadedRecoilPattern.length).fill([1 * document.getElementById("trackingSlider").value, 0]);
         loadedTrackingPattern = trackingSimulationPattern;
         document.getElementById("currentTrackingPattern").innerText = "Current loaded tracking pattern: right";
     }
