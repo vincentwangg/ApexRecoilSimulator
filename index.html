@@ -57,6 +57,15 @@
         <p>Light Guns</p>
         <button onclick="displayPresetRecoilPattern('R-301')">R-301</button>
         <button onclick="displayPresetRecoilPattern('R-99')">R-99</button>
+        <button onclick="displayPresetRecoilPattern('Alternator')">Alternator</button>
+        <p>Heavy Guns</p>
+        <button onclick="displayPresetRecoilPattern('Flatline')">Flatline</button>
+        <button onclick="displayPresetRecoilPattern('Spitfire')">Spitfire</button>
+        <p>Energy Guns</p>
+        <button onclick="displayPresetRecoilPattern('Volt')">Volt</button>
+        <button onclick="displayPresetRecoilPattern('Havoc')">Havoc</button>
+        <p>Special Guns</p>
+        <button onclick="displayPresetRecoilPattern('Prowler')">Prowler</button>
     </div>
     <div id="referenceLegend">
         <p>Black - What you need to drag with your mouse</p>
@@ -92,22 +101,22 @@
 
     function clearCanvas() {
         getCanvasContext().clearRect(0, 0, getCanvas().width, getCanvas().height);
-        // base_image = new Image();
-        // base_image.src = 'r99.png';
-        // getCanvasContext().globalAlpha = 0.4;
-        // base_image.onload = function(){
-        //     getCanvasContext().drawImage(base_image, 0, 0);
-        // }
+        base_image = new Image();
+        base_image.src = 'prowler.png';
+        getCanvasContext().globalAlpha = 0.4;
+        base_image.onload = function(){
+            getCanvasContext().drawImage(base_image, 0, 0);
+        }
     }
 
-    function drawRecoilPattern(recoilPatternArray, shouldLockAndClearCanvas = true) {
+    function drawRecoilPattern(recoilPatternArray, recoilPatternStartCoordH, shouldLockAndClearCanvas = true) {
         if (shouldLockAndClearCanvas) {
             editMode = false;
             clearCanvas();
             enableRecoilPatternButtons(true, false, false, false);
         }
 
-        let coordinate = [0, 0];
+        let coordinate = [recoilPatternStartCoordH[0], recoilPatternStartCoordH[1]];
         drawDotC(htoc(coordinate[0], coordinate[1]));
         recoilPatternArray.forEach(value => {
             coordinate[0] = coordinate[0] + value[0];
@@ -237,6 +246,7 @@
 
     let recoilPattern = [];
     let coordTracker = null;
+    let recoilPatternStart = null;
 
     function enableRecoilPatternButtons(create, undo, done, cancel) {
         document.getElementById("createRecoilPatternButton").disabled = !create;
@@ -250,6 +260,7 @@
         editMode = true;
         coordTracker = null;
         recoilPattern.length = 0;
+        recoilPatternStart = null;
         enableRecoilPatternButtons(false, true, true, true);
     }
 
@@ -259,7 +270,7 @@
         // Redraw full canvas because i'm too lazy to figure out how to undo
         clearCanvas();
 
-        drawRecoilPattern(recoilPattern, false);
+        drawRecoilPattern(recoilPattern, recoilPatternStart, false);
     }
 
     function finishRecoilPattern() {
@@ -288,6 +299,9 @@
         let x = event.clientX - rect.left;
         let y = event.clientY - rect.top;
         let newCoord = ctoh(x, y);
+        if (!recoilPatternStart) {
+            recoilPatternStart = newCoord;
+        }
 
         if (coordTracker != null) {
             recoilPattern.push([newCoord[0] - coordTracker[0], newCoord[1] - coordTracker[1]]);
@@ -614,11 +628,18 @@
         "R-301": [[17,36],[-2,61],[25,32],[1,31],[-5,26],[-8,15],[4,21],[25,-2],[9,7],[20,3],[3,5],[-27,23],[-13,12],[-19,0],[-24,-1],[-18,-5],[-5,4],[-7,0],[2,17],[-1,11],[20,6],[17,-14],[15,-11],[13,11],[11,12],[-19,6],[-1,-4]],
         "R-99": [[1,17],[1,13],[-8,21],[4,22],[8,34],[9,33],[13,13],[8,38],[3,22],[-13,26],[-8,14],[-10,18],[0,11],[5,-1],[12,-1],[12,17],[4,8],[-5,13],[-16,-1],[-7,8],[-8,5],[-13,5],[-14,5],[24,7],[8,2],[13,-1]],
         "RE-45": [],
+
+        "Havoc": [[28,48],[31,53],[-13,52],[-3,48],[-2,31],[-15,24],[-2,32],[-12,14],[-11,29],[-1,18],[12,5],[19,14],[14,-4],[15,2],[12,29],[-5,20],[-12,8],[-14,4],[-17,-14],[-14,4],[-13,11],[-6,22],[-2,64],[-15,20],[-7,37],[-12,32],[-16,15],[-8,14],[-19,27],[-1,22],[10,20],[6,16],[-3,18],[11,19],[7,15]],
+        "Prowler": [[-15,46],[-1,23],[4,35],[2,19],[-28,29],[-13,21],[-7,19],[-26,37],[16,26],[-17,22],[-3,17],[-6,25],[12,27],[36,2],[33,-2],[18,16],[14,16],[-2,17],[6,10],[22,18],[0,14],[9,33],[-17,6],[-34,22],[-12,11],[8,14],[16,4],[16,-1],[31,5],[11,9],[18,16],[16,10],[4,18],[-11,15]],
         "": [],
         "": [],
         "": [],
-        "": [],
-        "": [],
+    }
+    let presetRecoilPatternScale = {
+        "R-301": 1,
+        "R-99": 1,
+        "RE-45": 1,
+        "Havoc": 1
     }
     let presetRecoilRateOfFire = {
         "R-301": 816,
@@ -630,7 +651,7 @@
         loadedProfileName = gunName;
         loadedProfileRateOfFire = 1000 / (presetRecoilRateOfFire[gunName] / 60)
 
-        drawRecoilPattern(loadedRecoilPattern);
+        drawRecoilPattern(loadedRecoilPattern, [0, 0]);
         updateSimulationButtons();
         document.getElementById("currentRecoilPattern").innerText = "Current loaded recoil pattern: " + gunName;
     }
