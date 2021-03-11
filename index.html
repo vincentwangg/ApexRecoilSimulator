@@ -17,6 +17,7 @@
         <p id="currentRecoilPattern">Current loaded recoil pattern: None</p>
         <p id="currentTrackingPattern">Current loaded tracking pattern: None</p>
     </div>
+    <hr>
     <div id="recoilPatternCreationPanel">
         <p>Recoil pattern creation/edit</p>
         <button id="createRecoilPatternButton" onclick="createRecoilPattern()">Create Recoil Pattern</button>
@@ -24,6 +25,7 @@
         <button id="finishRecoilPatternButton" onclick="finishRecoilPattern()" disabled>Done</button>
         <button id="cancelRecoilPatternButton" onclick="cancelRecoilPattern()" disabled>Cancel</button>
     </div>
+    <hr>
     <div style="margin-bottom:10px">
         <p>Recoil pattern simulation</p>
         <button id="trackLeftButton" onclick="initiateTrackLeft()" disabled>Track Left</button>
@@ -46,13 +48,27 @@
         <button id="loopSimulation" onclick="loopSimulation()" disabled>Loop</button>
         <button id="stopSimulation" onclick="stopSimulation()" disabled>Stop</button>
     </div>
+    <hr>
     <div>
         <p>Practice Mode</p>
         <p style="display: inline-block; padding: 0; margin: 0">Sensitivity: </p>
         <input id="sensitivity" type="number" style="width: 50px" value="0.6" step="0.1">
-        <button id="startPracticeModeButton" onclick="startPracticeMode()">Start</button>
-        <button id="cancelPracticeModeButton" onclick="cancelPracticeMode()">Cancel</button>
+        <div>
+            <label>
+                <input type="checkbox">Show original recoil path
+            </label>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox">Show mouse path
+            </label>
+        </div>
+        <div>
+            <button id="startPracticeModeButton" onclick="startPracticeMode()">Start</button>
+            <button id="cancelPracticeModeButton" onclick="cancelPracticeMode()">Cancel</button>
+        </div>
     </div>
+    <hr>
     <div id="presetRecoilPatternsDiv">
         <p>Light Guns</p>
         <button onclick="displayPresetRecoilPattern('R-301')">R-301</button>
@@ -75,7 +91,7 @@
     </div>
     <div>
         <p>Volume</p>
-        <input id="volume" type="range" min="1" max="100" step="1" value="30">
+        <input id="volume" type="range" min="0" max="100" step="1" value="30">
     </div>
     <div id="outputDiv">
         <p id="output"></p>
@@ -151,9 +167,9 @@
 
             color = (highlightNthShot === -1 || highlightNthShot !== index) ? "#000000" : "#00ffff";
             if (highlightNthShot !== index) {
-                color = practiceMode ? "#000000" : color;
+                color = practiceMode ? "#ff00f2" : color;
             } else {
-                color = practiceMode ? "#ff9600" : color;
+                color = practiceMode ? "#000000" : color;
             }
             outputTrackingCoord[0] += trackingPatternX;
             outputTrackingCoord[1] += trackingPatternY;
@@ -593,7 +609,9 @@
                 xTrackingPattern = 0;
                 yTrackingPattern = 0;
                 numDots++;
-                new Audio("r301.mp3").play();
+                let audio = new Audio(gunNameToAudioFilename[loadedProfileName]);
+                audio.volume = document.getElementById("volume").value / 100;
+                audio.play();
 
                 let trackingPatternToUse;
                 if (loadedTrackingPattern) {
